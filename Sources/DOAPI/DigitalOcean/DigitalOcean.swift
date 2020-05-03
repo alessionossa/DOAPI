@@ -7,7 +7,7 @@ import Foundation
 
 public struct DigitalOcean {
     
-    public static var shared: DigitalOcean!
+//    public static var shared: DigitalOcean!
     
     typealias This = DigitalOcean
     
@@ -28,19 +28,19 @@ public struct DigitalOcean {
     var apiToken: String
     var session: URLSession
     
-    init(apiToken: String, session: URLSession = URLSession(configuration: .ephemeral)) {
+    public init(apiToken: String, session: URLSession = URLSession(configuration: .ephemeral)) {
         
         self.apiToken = apiToken
         self.session = session
         
-        if This.shared == nil {
-            This.shared = self
-        }
+//        if This.shared == nil {
+//            This.shared = self
+//        }
     }
     
-    public static func initialize(apiToken: String, session: URLSession = URLSession(configuration: .ephemeral)) {
-        let _ = DigitalOcean(apiToken: apiToken, session: session)
-    }
+//    public static func initialize(apiToken: String, session: URLSession = URLSession(configuration: .ephemeral)) {
+//        let _ = DigitalOcean(apiToken: apiToken, session: session)
+//    }
     
     public func request<Request: DORequest>(request req: Request, completion: @escaping (Bool, Request.Response?, Error?) -> Void) {
         let encoder = JSONEncoder()
