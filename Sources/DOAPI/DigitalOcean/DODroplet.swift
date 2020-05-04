@@ -143,7 +143,7 @@ public struct DODroplet: Codable {
         public var backups: Bool
         public var ipv6: Bool
         public var privateNetworking: Bool
-        public var userData: String
+        public var userData: String?
         public var monitoring: Bool
         public var volumes: [Int]?
         public var tags: [String]?
@@ -172,7 +172,7 @@ public struct DODroplet: Codable {
         public let query: [String : String]? = nil
         public var body: Body? { return self }
         
-        public init(name: String, region: String, size: String, image: DODroplet.ImageIdentifier, sshKeys: [String]?, backups: Bool, ipv6: Bool, privateNetworking: Bool, userData: String, monitoring: Bool, volumes: [Int]?, tags: [String]) {
+        public init(name: String, region: String, size: String, image: DODroplet.ImageIdentifier, sshKeys: [String]?, backups: Bool = false, ipv6: Bool, privateNetworking: Bool = false, userData: String? = nil, monitoring: Bool = false, volumes: [Int]? = nil, tags: [String]? = nil) {
             self.name = name
             self.region = region
             self.size = size
