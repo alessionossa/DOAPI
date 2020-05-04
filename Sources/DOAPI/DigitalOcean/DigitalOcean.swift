@@ -1,13 +1,16 @@
 import Foundation
+import Combine
 
 // Implementation of:
 //  https://developers.digitalocean.com/documentation/v2/
 
 // NOTE: All dates are ISO8601
 
-public struct DigitalOcean {
+public class DigitalOcean: ObservableObject {
     
 //    public static var shared: DigitalOcean!
+    
+    
     
     typealias This = DigitalOcean
     
@@ -42,7 +45,18 @@ public struct DigitalOcean {
 //        let _ = DigitalOcean(apiToken: apiToken, session: session)
 //    }
     
-    public func request<Request: DORequest>(request req: Request, completion: @escaping (Bool, Request.Response?, Error?) -> Void) {
+    public func updateApiToken(newToken: String) {
+        self.apiToken = newToken
+        self.session = URLSession(configuration: .ephemeral)
+        
+        objectWillChange.send()
+    }
+    
+    public func isTokenNotEmpty() -> Bool {
+        return !self.apiToken.isEmpty
+    }
+    
+    public func request<Request: DORequest>(request req: Request, completion: @escaping (Bool, Request.Response?, DOError?) -> Void) {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .formatted(This.dateFormatter)
         encoder.outputFormatting = .prettyPrinted
@@ -64,7 +78,7 @@ public struct DigitalOcean {
         request(method: req.method, path: req.path, query: req.query, body: bodyData, completion: completion)
     }
     
-    public func request<Result: Decodable>(method: String, path: String, query: [String:String]? = nil, body: Data? = nil, completion: @escaping (Bool, Result?, Error?) -> Void) {
+    public func request<Result: Decodable>(method: String, path: String, query: [String:String]? = nil, body: Data? = nil, completion: @escaping (Bool, Result?, DOError?) -> Void) {
         let endpoint = "\(This.api)\(path)"
         var components = URLComponents(string: endpoint)
         
@@ -78,7 +92,7 @@ public struct DigitalOcean {
             }
         }
         
-        let fail = { (error: Error) in
+        let fail = { (error: DOError) in
             DispatchQueue.global().async {
                 completion(false,nil,error)
             }
@@ -114,7 +128,7 @@ public struct DigitalOcean {
         let task = session.dataTask(with: request) { (data, resp, error) in
             
             guard error == nil else {
-                fail(error!)
+                fail(DOError.generic(error!.localizedDescription))
                 return
             }
             
@@ -127,10 +141,10 @@ public struct DigitalOcean {
             decoder.dateDecodingStrategy = .formatted(This.dateFormatter)
             
             guard !This.errorStatusRange.contains(resp.statusCode) else {
-                let error: Error
+                let error: DOError
                 if let data = data, var remoteError = try? decoder.decode(DORemoteError.self, from: data) {
                     remoteError.status = resp.statusCode
-                    error = remoteError
+                    error = DOError.remote(remoteError)
                 } else {
                     error = DOError.errorStatusCode(resp.statusCode)
                 }
