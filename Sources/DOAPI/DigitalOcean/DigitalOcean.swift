@@ -8,9 +8,17 @@ import Combine
 
 public class DigitalOcean: ObservableObject {
     
-//    public static var shared: DigitalOcean!
+    public static var shared: DigitalOcean {
+        get {
+            if (DigitalOcean._shared == nil) {
+                DigitalOcean._shared = DigitalOcean.init(apiToken: "")
+            }
+            
+            return DigitalOcean._shared!
+        }
+    }
     
-    
+    private static var _shared: DigitalOcean?
     
     typealias This = DigitalOcean
     
