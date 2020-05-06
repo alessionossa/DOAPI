@@ -165,6 +165,14 @@ public class DigitalOcean: ObservableObject {
                 return
             }
             
+            if resp.statusCode == 204 {
+                print("Check result types")
+                debugPrint(Result.self)
+                debugPrint(Result.self is DONull.Type)
+                
+                succeed(DONull.null as! Result)
+            }
+            
             switch Result.self {
             case is DONull.Type:
                 succeed(DONull.null as! Result)
