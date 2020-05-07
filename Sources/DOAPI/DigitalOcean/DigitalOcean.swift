@@ -100,7 +100,7 @@ public class DigitalOcean: ObservableObject {
                         .first(where: { $0.name == "page" })!.value!
                     
                     let newPerPage = newComponents.queryItems!
-                        .first(where: { $0.name == "perPage" })!.value!
+                        .first(where: { $0.name == "per_page" })!.value!
                     
                     let newReq = req.changingPages(newPage: Int(newPage), newPerPage: Int(newPerPage))
                     
