@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct DOSSHKey: Codable {
+public struct DOSSHKey: Codable, Hashable {
     
     public var id: Int
     public var fingerprint: String
