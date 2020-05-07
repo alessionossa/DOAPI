@@ -64,7 +64,7 @@ public class DigitalOcean: ObservableObject {
         return !self.apiToken.isEmpty
     }
     
-    public func requestAll<Request: DOPagedRequest>(request req: Request, completion: @escaping (Bool, [Request.Response?]?, DOError?) -> Void) {
+    public func requestAll<Request: DOPagedRequest>(request req: Request, completion: @escaping (Bool, [Request.Response]?, DOError?) -> Void) {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .formatted(This.dateFormatter)
         encoder.outputFormatting = .prettyPrinted
@@ -83,11 +83,17 @@ public class DigitalOcean: ObservableObject {
             bodyData = nil
         }
         
-        var totalResult: [Request.Response?] = []
+        let totalResult: [Request.Response] = []
         
-        request(method: req.method, path: req.path, query: req.query, body: bodyData) { (success : Bool, result: Request.Response?, error: DOError?) in
+        recursiveRequestPages(request: req, body: bodyData, totalResponses: totalResult, completion: completion)
+    }
+    
+    private func recursiveRequestPages<Request: DOPagedRequest>(request req: Request, body: Data?, totalResponses: [Request.Response], completion: @escaping (Bool, [Request.Response]?, DOError?) -> Void) {
+        
+        request(method: req.method, path: req.path, query: req.query, body: body) { (success : Bool, result: Request.Response?, error: DOError?) in
             if success {
-                totalResult.append(result)
+                var updatedResponse = totalResponses
+                updatedResponse.append(result!)
                 
                 if let nextLink = result?.links.pages?.next {
                     print("Next link: \(nextLink)")
@@ -104,13 +110,13 @@ public class DigitalOcean: ObservableObject {
                     
                     let newReq = req.changingPages(newPage: Int(newPage), newPerPage: Int(newPerPage))
                     
-                    self.requestAll(request: newReq, completion: completion)
+                    self.recursiveRequestPages(request: newReq, body: body, totalResponses: updatedResponse, completion: completion)
                 } else {
-                    completion(success, totalResult, error)
+                    completion(success, updatedResponse, error)
                 }
                 
             } else {
-                completion(success, totalResult, error)
+                completion(success, totalResponses, error)
             }
         }
     }
