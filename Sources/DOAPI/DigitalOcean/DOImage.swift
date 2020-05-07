@@ -42,9 +42,28 @@ public struct DOImage: Codable {
     
     public struct List: DOPagedRequest {
         
-        public enum ImageType: String {
+        public enum ImageType: String, CustomStringConvertible {
+            
             case distribution
             case application
+            case snapshot
+            case custom
+            case backup
+            
+            public var description: String {
+                switch self {
+                case .distribution:
+                    return "Distribution"
+                case .application:
+                    return "Application"
+                case .snapshot:
+                    return "Snapshot"
+                case .custom:
+                    return "Custom"
+                case .backup:
+                    return "Backup"
+                }
+            }
         }
         
         public var type: ImageType?
@@ -64,7 +83,7 @@ public struct DOImage: Codable {
                 "per_page": "\(perPage)",
             ]
             if let type = type {
-                items["type"] = "\(type)"
+                items["type"] = "\(type.rawValue)"
                 
             }
             if let privateOnly = privateOnly {
