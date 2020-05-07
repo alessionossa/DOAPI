@@ -159,21 +159,30 @@ public struct DOVolume: Codable {
     public struct ListSnapshots: DOPagedRequest {
         
         public var id: Int
-        public var page: Int
-        public var perPage: Int
+        public var page: Int?
+        public var perPage: Int?
         
-        public struct Response: DOResponse {
+        public struct Response: DOPagedResponse {
+            public var links: DOLinks
+            
+            public var meta: DOMeta
+            
             public let snapshots: [DOSnapshot]
         }
         
         public let method = "GET"
         public var path: String { return "volumes/\(id)/snapshots" }
         public var query: [String : String]? {
-            return [
-                "id": "\(id)",
-                "page": "\(page)",
-                "per_page": "\(perPage)",
-            ]
+            var items: [String: String] = [:]
+            if (page != nil && perPage != nil) {
+                items = [
+                    "page": "\(page!)",
+                    "per_page": "\(perPage!)",
+                ]
+            }
+            
+            items["id"] = "\(id)"
+            return items
         }
         public let body: DONull? = nil
         

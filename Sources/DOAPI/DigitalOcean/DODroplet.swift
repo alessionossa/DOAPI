@@ -221,20 +221,28 @@ public struct DODroplet: Codable {
     public struct List: DOPagedRequest {
         
         public var tag: String?
-        public var page: Int
-        public var perPage: Int
+        public var page: Int?
+        public var perPage: Int?
         
-        public struct Response: DOResponse {
+        public struct Response: DOPagedResponse {
+            public var links: DOLinks
+            
+            public var meta: DOMeta
+            
             public let droplets: [DODroplet]
         }
         
         public let method = "GET"
         public let path = "droplets"
         public var query: [String : String]? {
-            var items = [
-                "page": "\(page)",
-                "per_page": "\(perPage)",
-            ]
+            var items: [String:String] = [:]
+            
+            if (page != nil && perPage != nil) {
+                items = [
+                    "page": "\(page!)",
+                    "per_page": "\(perPage!)",
+                ]
+            }
             if let tag = tag {
                 items["tag"] = tag
             }

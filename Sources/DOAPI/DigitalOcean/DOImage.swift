@@ -68,20 +68,27 @@ public struct DOImage: Codable {
         
         public var type: ImageType?
         public var privateOnly: Bool?
-        public var page: Int
-        public var perPage: Int
+        public var page: Int?
+        public var perPage: Int?
         
-        public struct Response: DOResponse {
+        public struct Response: DOPagedResponse {
+            public var meta: DOMeta
+            
+            public var links: DOLinks
+            
             public let images: [DOImage]
         }
         
         public let method = "GET"
         public let path = "images"
         public var query: [String : String]? {
-            var items: [String: String] = [
-                "page": "\(page)",
-                "per_page": "\(perPage)",
-            ]
+            var items: [String: String] = [:]
+            if (page != nil && perPage != nil) {
+                items = [
+                    "page": "\(page!)",
+                    "per_page": "\(perPage!)",
+                ]
+            }
             if let type = type {
                 items["type"] = "\(type.rawValue)"
                 

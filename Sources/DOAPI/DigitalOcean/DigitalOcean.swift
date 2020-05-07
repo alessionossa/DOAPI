@@ -64,6 +64,57 @@ public class DigitalOcean: ObservableObject {
         return !self.apiToken.isEmpty
     }
     
+    public func requestAll<Request: DOPagedRequest>(request req: Request, completion: @escaping (Bool, [Request.Response?]?, DOError?) -> Void) {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .formatted(This.dateFormatter)
+        encoder.outputFormatting = .prettyPrinted
+        let bodyData: Data?
+        if let body = req.body {
+            guard let encodedBody = try? encoder.encode(body) else {
+                let error = DOError.failedToEncodeBody(Request.Body.self, nil)
+                DispatchQueue.global().async {
+                    completion(false,nil,error)
+                }
+                return
+            }
+            
+            bodyData = encodedBody
+        } else {
+            bodyData = nil
+        }
+        
+        var totalResult: [Request.Response?] = []
+        
+        request(method: req.method, path: req.path, query: req.query, body: bodyData) { (success : Bool, result: Request.Response?, error: DOError?) in
+            if success {
+                totalResult.append(result)
+                
+                if let nextLink = result?.links.pages?.next {
+                    print("Next link: \(nextLink)")
+                    
+                    guard let newComponents = URLComponents(string: nextLink) else {
+                        fatalError("Cannot get components url: \(nextLink)")
+                    }
+                    
+                    let newPage = newComponents.queryItems!
+                        .first(where: { $0.name == "page" })!.value!
+                    
+                    let newPerPage = newComponents.queryItems!
+                        .first(where: { $0.name == "perPage" })!.value!
+                    
+                    let newReq = req.changingPages(newPage: Int(newPage), newPerPage: Int(newPerPage))
+                    
+                    self.requestAll(request: newReq, completion: completion)
+                } else {
+                    completion(success, totalResult, error)
+                }
+                
+            } else {
+                completion(success, totalResult, error)
+            }
+        }
+    }
+    
     public func request<Request: DORequest>(request req: Request, completion: @escaping (Bool, Request.Response?, DOError?) -> Void) {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .formatted(This.dateFormatter)
@@ -211,12 +262,43 @@ public protocol DORequest {
 }
 
 public protocol DOResponse: Codable {
-    
 }
 
-protocol DOPagedRequest: DORequest {
-    var page: Int { get }
-    var perPage: Int { get }
+public protocol DOPagedRequest: DORequest where Response: DOPagedResponse {
+    var page: Int? { get set }
+    var perPage: Int? { get set }
+}
+
+extension DOPagedRequest {
+    func changingPages(newPage: Int?, newPerPage: Int?) -> Self {
+        var updatedRequest = self
+        updatedRequest.page = newPage
+        updatedRequest.perPage = newPerPage
+        return updatedRequest
+    }
+}
+
+public struct DOLinks: Codable {
+    
+    public struct Pages: Codable {
+        var first: String?
+        var prev: String?
+        var next: String?
+        var last: String?
+    }
+    
+    public var pages: Pages?
+}
+
+public struct DOMeta: Codable {
+    var total: Int
+}
+
+public protocol DOPagedResponse: DOResponse {
+    
+    var links: DOLinks { get }
+    
+    var meta: DOMeta { get }
 }
 
 // Errors
