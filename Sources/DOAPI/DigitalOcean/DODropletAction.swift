@@ -38,7 +38,7 @@ public struct DODropletAction: Codable {
     public var status: Status
     public var type: ActionType
     public var startedAt: Date
-    public var completedAt: Date
+    public var completedAt: Date?
     public var resourceId: Int?
     public var resourceType: String
     public var region: DORegion
