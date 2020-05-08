@@ -10,6 +10,7 @@ import Foundation
 public struct DOImage: Codable {
     
     public enum ImageType: String, Codable {
+        case application
         case snapshot
         case backup
         case base
