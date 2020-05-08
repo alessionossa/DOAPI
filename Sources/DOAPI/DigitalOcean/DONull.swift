@@ -25,3 +25,6 @@ public struct DONull: Equatable, Hashable, Comparable, Codable {
     
     public static let null = DONull()
 }
+
+extension DONull: DOResponse {
+}
