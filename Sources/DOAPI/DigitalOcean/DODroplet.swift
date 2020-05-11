@@ -331,9 +331,11 @@ public struct DODroplet: Codable {
     
     public struct Delete: DORequest {
         
+        public typealias Response = DONull
+        
         public var id: Int
         
-        public struct Response: DOResponse { }
+//        public struct Response: DOResponse { }
         
         public let method = "DELETE"
         public var path: String { return "droplets/\(id)" }
